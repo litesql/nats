@@ -1,0 +1,5 @@
+*.so
+nats.h
+
+# Added by goreleaser init:
+dist/
