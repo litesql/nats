@@ -22,6 +22,21 @@ builds:
       - CGO_ENABLED=1
       - CC=zig cc -target x86_64-linux-gnu
 
+  - id: nats_linux_arm64
+    binary: nats
+    buildmode: "c-shared"
+    flags:
+      - -tags=zig
+    ldflags:
+    - -s -w -X github.com/litesql/nats/extension.version={{.Version}} -X github.com/litesql/nats/extension.commit={{.Commit}} -X github.com/litesql/nats/extension.date={{.Date}}
+    goos:
+      - linux
+    goarch:
+      - arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -target aarch64-linux-gnu
+
   - id: nats_windows
     binary: nats
     buildmode: "c-shared"
@@ -54,7 +69,7 @@ builds:
 archives:
   - id: nats
     formats: [tar.gz]
-    ids: [nats, nats_windows, nats_darwin]
+    ids: [nats, nats_linux_arm64, nats_windows, nats_darwin]
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       nats_v

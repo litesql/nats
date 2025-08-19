@@ -1,5 +1,5 @@
 # sqlite-nats
-SQLite Extension to integrate with NATS servers.
+SQLite Extension to integrate with NATS and JetStream servers.
 
 ## Installation
 
@@ -33,7 +33,7 @@ SELECT nats_info();
 # Create a virtual table using NATS_SUB to configure the connection to the broker
 CREATE VIRTUAL TABLE temp.sub USING NATS_SUB(servers='nats://localhost:4222', table=nats_data);
 
-# Insert the topic name and qos to subscribe into the created virtual table
+# Insert the subject name into the created virtual table to subscribe
 INSERT INTO temp.sub(subject) VALUES('my/topic');
 ```
 
@@ -125,5 +125,74 @@ You can configure the connection to the broker by passing parameters to the VIRT
 | cert_file | TLS: Path to certificate file | |
 | cert_key_file | TLS: Path to certificate key file | |
 | ca_file | TLS: Path to CA certificate file | |
-| table | Name of the table where incoming messages will be stored. Only for nats_sub | nats_data |
+| table | Name of the table where incoming messages will be stored. Only for nats_sub and jetstream_sub | nats_data and jetstream_data |
 | logger | Log errors to stdout, stderr or file:/path/to/file.log |
+
+## Using JetStream
+
+### Subscriber
+
+```sh
+# Create a virtual table using JETSTREAM_SUB to configure the connection to the broker
+CREATE VIRTUAL TABLE temp.sub USING JETSTREAM_SUB(servers='nats://localhost:4222', table=jetstream_data, timeout=5000);
+
+# Insert the stream name into the created virtual table to subscribe
+INSERT INTO temp.sub(stream, subject) VALUES('my_stream', 'my_topic');
+```
+
+Subscriber table schema:
+
+```sql
+TABLE temp.sub(
+  stream TEXT,
+  subject TEXT,
+  durable TEXT
+)
+```
+
+### Publisher
+
+```sh
+# Create a virtual table using JETSTREAM_PUB to configure the connection to the broker
+CREATE VIRTUAL TABLE temp.pub USING JETSTREAM_PUB(servers='nats://localhost:4222', timeout=5000);
+
+# Insert subject and data into the created virtual table to publish messages
+INSERT INTO temp.pub(subject, data) VALUES('my_topic', 'hello');
+```
+
+Publisher table schema:
+
+```sql
+TABLE temp.pub(
+  subject TEXT,
+  data BLOB
+)
+```
+
+### Stored messages
+
+```sh
+# Set output mode (optional)
+.mode qbox
+
+# Query for the incoming messages
+SELECT subject, data, timestamp FROM jetstream_data;
+┌──────────────┬─────────┬───────────────────────────────────────┐
+│  subject     │  data   │               timestamp               │
+├──────────────┼─────────┼───────────────────────────────────────┤
+│ 'my_subject' │ 'hello' │ '2025-08-18T22:32:59.121518731-03:00' │
+└──────────────┴─────────┴───────────────────────────────────────┘
+```
+
+Incoming messages are stored in tables according to the following schema:
+
+```sql
+TABLE jetstream_data(
+  subject TEXT,
+  data BLOB,
+  headers JSONB,
+  reply TEXT,
+  timestamp DATETIME
+)
+```
+

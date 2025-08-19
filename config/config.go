@@ -20,4 +20,8 @@ const (
 	DefaultTableName          = "nats_data"
 	DefaultPublisherVTabName  = "nats_pub"
 	DefaultSubscriberVTabName = "nats_sub"
+
+	DefaultJetStreamTableName          = "jetstream_data"
+	DefaultJetStreamPublisherVTabName  = "jetstream_pub"
+	DefaultJetStreamSubscriberVTabName = "jetstream_sub"
 )
